@@ -24,9 +24,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		7B1D5C292E2DF2F100795E8E /* iOS Client.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "iOS Client.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		7B1D5C362E2DF2F300795E8E /* iOS ClientTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "iOS ClientTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		7B1D5C402E2DF2F300795E8E /* iOS ClientUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "iOS ClientUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		7B1D5C292E2DF2F100795E8E /* MeMachine.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MeMachine.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7B1D5C362E2DF2F300795E8E /* MeMachineTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MeMachineTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		7B1D5C402E2DF2F300795E8E /* MeMachineUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MeMachineUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -85,9 +85,9 @@
 		7B1D5C2A2E2DF2F100795E8E /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				7B1D5C292E2DF2F100795E8E /* iOS Client.app */,
-				7B1D5C362E2DF2F300795E8E /* iOS ClientTests.xctest */,
-				7B1D5C402E2DF2F300795E8E /* iOS ClientUITests.xctest */,
+				7B1D5C292E2DF2F100795E8E /* MeMachine.app */,
+				7B1D5C362E2DF2F300795E8E /* MeMachineTests.xctest */,
+				7B1D5C402E2DF2F300795E8E /* MeMachineUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -95,9 +95,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		7B1D5C282E2DF2F100795E8E /* iOS Client */ = {
+		7B1D5C282E2DF2F100795E8E /* MeMachine */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 7B1D5C4A2E2DF2F300795E8E /* Build configuration list for PBXNativeTarget "iOS Client" */;
+			buildConfigurationList = 7B1D5C4A2E2DF2F300795E8E /* Build configuration list for PBXNativeTarget "MeMachine" */;
 			buildPhases = (
 				7B1D5C252E2DF2F100795E8E /* Sources */,
 				7B1D5C262E2DF2F100795E8E /* Frameworks */,
@@ -110,16 +110,16 @@
 			fileSystemSynchronizedGroups = (
 				7B1D5C2B2E2DF2F100795E8E /* iOS Client */,
 			);
-			name = "iOS Client";
+			name = MeMachine;
 			packageProductDependencies = (
 			);
 			productName = "iOS Client";
-			productReference = 7B1D5C292E2DF2F100795E8E /* iOS Client.app */;
+			productReference = 7B1D5C292E2DF2F100795E8E /* MeMachine.app */;
 			productType = "com.apple.product-type.application";
 		};
-		7B1D5C352E2DF2F300795E8E /* iOS ClientTests */ = {
+		7B1D5C352E2DF2F300795E8E /* MeMachineTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 7B1D5C4D2E2DF2F300795E8E /* Build configuration list for PBXNativeTarget "iOS ClientTests" */;
+			buildConfigurationList = 7B1D5C4D2E2DF2F300795E8E /* Build configuration list for PBXNativeTarget "MeMachineTests" */;
 			buildPhases = (
 				7B1D5C322E2DF2F300795E8E /* Sources */,
 				7B1D5C332E2DF2F300795E8E /* Frameworks */,
@@ -133,16 +133,16 @@
 			fileSystemSynchronizedGroups = (
 				7B1D5C392E2DF2F300795E8E /* iOS ClientTests */,
 			);
-			name = "iOS ClientTests";
+			name = MeMachineTests;
 			packageProductDependencies = (
 			);
 			productName = "iOS ClientTests";
-			productReference = 7B1D5C362E2DF2F300795E8E /* iOS ClientTests.xctest */;
+			productReference = 7B1D5C362E2DF2F300795E8E /* MeMachineTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		7B1D5C3F2E2DF2F300795E8E /* iOS ClientUITests */ = {
+		7B1D5C3F2E2DF2F300795E8E /* MeMachineUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 7B1D5C502E2DF2F300795E8E /* Build configuration list for PBXNativeTarget "iOS ClientUITests" */;
+			buildConfigurationList = 7B1D5C502E2DF2F300795E8E /* Build configuration list for PBXNativeTarget "MeMachineUITests" */;
 			buildPhases = (
 				7B1D5C3C2E2DF2F300795E8E /* Sources */,
 				7B1D5C3D2E2DF2F300795E8E /* Frameworks */,
@@ -156,11 +156,11 @@
 			fileSystemSynchronizedGroups = (
 				7B1D5C432E2DF2F300795E8E /* iOS ClientUITests */,
 			);
-			name = "iOS ClientUITests";
+			name = MeMachineUITests;
 			packageProductDependencies = (
 			);
 			productName = "iOS ClientUITests";
-			productReference = 7B1D5C402E2DF2F300795E8E /* iOS ClientUITests.xctest */;
+			productReference = 7B1D5C402E2DF2F300795E8E /* MeMachineUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -186,7 +186,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 7B1D5C242E2DF2F100795E8E /* Build configuration list for PBXProject "iOS Client" */;
+			buildConfigurationList = 7B1D5C242E2DF2F100795E8E /* Build configuration list for PBXProject "MeMachine" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -200,9 +200,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				7B1D5C282E2DF2F100795E8E /* iOS Client */,
-				7B1D5C352E2DF2F300795E8E /* iOS ClientTests */,
-				7B1D5C3F2E2DF2F300795E8E /* iOS ClientUITests */,
+				7B1D5C282E2DF2F100795E8E /* MeMachine */,
+				7B1D5C352E2DF2F300795E8E /* MeMachineTests */,
+				7B1D5C3F2E2DF2F300795E8E /* MeMachineUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -258,12 +258,12 @@
 /* Begin PBXTargetDependency section */
 		7B1D5C382E2DF2F300795E8E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 7B1D5C282E2DF2F100795E8E /* iOS Client */;
+			target = 7B1D5C282E2DF2F100795E8E /* MeMachine */;
 			targetProxy = 7B1D5C372E2DF2F300795E8E /* PBXContainerItemProxy */;
 		};
 		7B1D5C422E2DF2F300795E8E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 7B1D5C282E2DF2F100795E8E /* iOS Client */;
+			target = 7B1D5C282E2DF2F100795E8E /* MeMachine */;
 			targetProxy = 7B1D5C412E2DF2F300795E8E /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -456,7 +456,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/iOS Client.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/iOS Client";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MeMachine.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MeMachine";
 			};
 			name = Debug;
 		};
@@ -474,7 +474,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/iOS Client.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/iOS Client";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MeMachine.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MeMachine";
 			};
 			name = Release;
 		};
@@ -513,7 +513,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		7B1D5C242E2DF2F100795E8E /* Build configuration list for PBXProject "iOS Client" */ = {
+		7B1D5C242E2DF2F100795E8E /* Build configuration list for PBXProject "MeMachine" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7B1D5C482E2DF2F300795E8E /* Debug */,
@@ -522,7 +522,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		7B1D5C4A2E2DF2F300795E8E /* Build configuration list for PBXNativeTarget "iOS Client" */ = {
+		7B1D5C4A2E2DF2F300795E8E /* Build configuration list for PBXNativeTarget "MeMachine" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7B1D5C4B2E2DF2F300795E8E /* Debug */,
@@ -531,7 +531,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		7B1D5C4D2E2DF2F300795E8E /* Build configuration list for PBXNativeTarget "iOS ClientTests" */ = {
+		7B1D5C4D2E2DF2F300795E8E /* Build configuration list for PBXNativeTarget "MeMachineTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7B1D5C4E2E2DF2F300795E8E /* Debug */,
@@ -540,7 +540,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		7B1D5C502E2DF2F300795E8E /* Build configuration list for PBXNativeTarget "iOS ClientUITests" */ = {
+		7B1D5C502E2DF2F300795E8E /* Build configuration list for PBXNativeTarget "MeMachineUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7B1D5C512E2DF2F300795E8E /* Debug */,
