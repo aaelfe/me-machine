@@ -9,127 +9,186 @@ import SwiftUI
 
 struct AuthView: View {
     @StateObject private var authService = AuthService.shared
+    @State private var showingSignIn = false
     @State private var showingSignUp = false
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 32) {
-                // App Logo/Header
-                VStack(spacing: 16) {
-                    Image(systemName: "brain.head.profile")
-                        .font(.system(size: 80))
-                        .foregroundColor(.purple)
-                    
-                    Text("MeMachine")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                    
-                    Text("Connect with your future self")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                }
-                .padding(.top, 40)
-                
-                Spacer()
-                
-                // Auth Options
-                VStack(spacing: 16) {
-                    // Quick Start (Anonymous)
-                    Button(action: signInAnonymously) {
-                        HStack {
-                            Image(systemName: "person.crop.circle.dashed")
-                            Text("Quick Start")
-                            Spacer()
-                            if authService.isLoading {
-                                ProgressView()
-                                    .scaleEffect(0.8)
+            GeometryReader { geometry in
+                ScrollView {
+                    VStack(spacing: 0) {
+                        // App Logo/Header
+                        VStack(spacing: 24) {
+                            // Logo with gradient background
+                            ZStack {
+                                Circle()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [.purple.opacity(0.2), .blue.opacity(0.1)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .frame(width: 120, height: 120)
+                                
+                                Image(systemName: "brain.head.profile")
+                                    .font(.system(size: 60, weight: .light))
+                                    .foregroundStyle(
+                                        LinearGradient(
+                                            colors: [.purple, .blue],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                            }
+                            
+                            VStack(spacing: 8) {
+                                Text("MeMachine")
+                                    .font(.system(size: 36, weight: .bold, design: .rounded))
+                                    .foregroundStyle(
+                                        LinearGradient(
+                                            colors: [.primary, .secondary],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                                
+                                Text("Connect with your future self")
+                                    .font(.title3)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
                             }
                         }
-                        .padding()
-                        .background(Color.purple.opacity(0.1))
-                        .foregroundColor(.purple)
-                        .cornerRadius(12)
-                    }
-                    .disabled(authService.isLoading)
-                    
-                    // Sign In / Sign Up
-                    HStack(spacing: 12) {
-                        Button("Sign In") {
-                            showingSignUp = false
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .tint(.blue)
+                        .padding(.top, geometry.safeAreaInsets.top + 60)
+                        .padding(.bottom, 60)
                         
-                        Button("Sign Up") {
-                            showingSignUp = true
-                        }
-                        .buttonStyle(.bordered)
-                    }
-                    
-                    // Social Auth (Future)
-                    VStack(spacing: 12) {
-                        Button(action: signInWithApple) {
-                            HStack {
-                                Image(systemName: "applelogo")
-                                Text("Continue with Apple")
+                        // Auth Options Card
+                        VStack(spacing: 24) {
+                            // Primary Auth Buttons
+                            VStack(spacing: 16) {
+                                // Sign In / Sign Up
+                                HStack(spacing: 16) {
+                                    Button("Sign In") {
+                                        showingSignIn = true
+                                    }
+                                    .buttonStyle(PrimaryButtonStyle())
+                                    .frame(maxWidth: .infinity)
+                                    
+                                    Button("Sign Up") {
+                                        showingSignUp = true
+                                    }
+                                    .buttonStyle(SecondaryButtonStyle())
+                                    .frame(maxWidth: .infinity)
+                                }
+                                
+                                // Divider
+                                HStack {
+                                    Rectangle()
+                                        .fill(Color.secondary.opacity(0.3))
+                                        .frame(height: 1)
+                                    
+                                    Text("or")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .padding(.horizontal, 16)
+                                    
+                                    Rectangle()
+                                        .fill(Color.secondary.opacity(0.3))
+                                        .frame(height: 1)
+                                }
+                                .padding(.vertical, 8)
                             }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.black)
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
+                            
+                            // Social Auth Buttons
+                            VStack(spacing: 12) {
+                                Button(action: signInWithApple) {
+                                    HStack(spacing: 12) {
+                                        Image(systemName: "applelogo")
+                                            .font(.system(size: 18, weight: .medium))
+                                        Text("Continue with Apple")
+                                            .font(.system(size: 16, weight: .semibold))
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 50)
+                                    .background(Color.black)
+                                    .foregroundColor(.white)
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                }
+                                .disabled(true)
+                                .opacity(0.6)
+                                
+                                Button(action: signInWithGoogle) {
+                                    HStack(spacing: 12) {
+                                        Image(systemName: "globe")
+                                            .font(.system(size: 18, weight: .medium))
+                                        Text("Continue with Google")
+                                            .font(.system(size: 16, weight: .semibold))
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 50)
+                                    .background(
+                                        LinearGradient(
+                                            colors: [Color.blue, Color.blue.opacity(0.8)],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                                    .foregroundColor(.white)
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                }
+                                .disabled(true)
+                                .opacity(0.6)
+                            }
                         }
-                        .disabled(true) // TODO: Implement
+                        .padding(24)
+                        .background(
+                            RoundedRectangle(cornerRadius: 20)
+                                .fill(.regularMaterial)
+                                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
+                        )
+                        .padding(.horizontal, 24)
                         
-                        Button(action: signInWithGoogle) {
-                            HStack {
-                                Image(systemName: "globe")
-                                Text("Continue with Google")
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
+                        // Error Message
+                        if let error = authService.authError {
+                            Text(error)
+                                .font(.callout)
+                                .foregroundColor(.red)
+                                .padding(.horizontal, 24)
+                                .padding(.top, 16)
+                                .multilineTextAlignment(.center)
                         }
-                        .disabled(true) // TODO: Implement
+                        
+                        Spacer(minLength: 40)
+                        
+                        // Privacy Note
+                        Text("By continuing, you agree to our Terms of Service and Privacy Policy")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 32)
+                            .padding(.bottom, geometry.safeAreaInsets.bottom + 20)
                     }
                 }
-                .padding(.horizontal)
-                
-                // Error Message
-                if let error = authService.authError {
-                    Text(error)
-                        .foregroundColor(.red)
-                        .font(.caption)
-                        .padding(.horizontal)
-                }
-                
-                Spacer()
-                
-                // Privacy Note
-                Text("By continuing, you agree to our Terms of Service and Privacy Policy")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-                    .padding(.bottom)
             }
+            .background(
+                LinearGradient(
+                    colors: [
+                        Color.purple.opacity(0.05),
+                        Color.blue.opacity(0.05),
+                        Color.clear
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
             .navigationBarHidden(true)
         }
-        .sheet(isPresented: $showingSignUp) {
-            if showingSignUp {
-                SignUpView()
-            } else {
-                SignInView()
-            }
+        .sheet(isPresented: $showingSignIn) {
+            SignInView()
         }
-    }
-    
-    private func signInAnonymously() {
-        Task {
-            try? await authService.signInAnonymously()
+        .sheet(isPresented: $showingSignUp) {
+            SignUpView()
         }
     }
     
@@ -139,6 +198,49 @@ struct AuthView: View {
     
     private func signInWithGoogle() {
         // TODO: Implement Google Sign In
+    }
+}
+
+// MARK: - Custom Button Styles
+struct PrimaryButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 16, weight: .semibold))
+            .frame(maxWidth: .infinity)
+            .frame(height: 50)
+            .foregroundColor(.white)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(
+                        LinearGradient(
+                            colors: [.blue, .blue.opacity(0.8)],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+            )
+            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+    }
+}
+
+struct SecondaryButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 16, weight: .semibold))
+            .frame(maxWidth: .infinity)
+            .frame(height: 50)
+            .foregroundColor(.blue)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.blue.opacity(0.05))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.blue, lineWidth: 2)
+                    )
+            )
+            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
     }
 }
 
