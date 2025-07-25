@@ -1,0 +1,44 @@
+# Project-wide .gitignore for MeMachine
+
+# iOS Client Secrets
+iOS Client/iOS Client/Config/Config.xcconfig
+iOS Client/iOS Client/Config/SupabaseSecrets.plist
+
+# Backend Environment
+backend/.env
+backend/.env.local
+backend/.env.development
+backend/.env.production
+
+# Python
+backend/__pycache__/
+backend/*.py[cod]
+backend/*$py.class
+backend/venv/
+backend/.venv/
+
+# Supabase
+backend/supabase/.temp/
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
