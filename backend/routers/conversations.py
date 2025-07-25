@@ -1,21 +1,21 @@
 # routers/conversations.py
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
 from config import supabase
+from .auth import get_current_user_id
 
 router = APIRouter()
 
 class ConversationResponse(BaseModel):
-    id: int  # Changed to int to match bigint in schema
+    id: int  # Will be converted from bigint by Pydantic
     user_id: str
     created_at: datetime
-    message_count: int
 
 @router.post("/", response_model=ConversationResponse)
 async def create_conversation(
-    user_id: str  # TODO: Get from auth dependency
+    user_id: str = Depends(get_current_user_id)
 ):
     """Create new conversation"""
     try:
@@ -25,19 +25,15 @@ async def create_conversation(
         
         result = supabase.table("conversations").insert(conversation_data).execute()
         
-        # Get message count (0 for new conversation)
-        response_data = result.data[0]
-        response_data["message_count"] = 0
-        
-        return response_data
+        return result.data[0]
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/", response_model=List[ConversationResponse])
 async def list_conversations(
-    user_id: str,  # TODO: Get from auth dependency
-    limit: int = 50
+    limit: int = 50,
+    user_id: str = Depends(get_current_user_id)
 ):
     """List user's conversations"""
     try:
@@ -45,18 +41,7 @@ async def list_conversations(
             "user_id", user_id
         ).order("created_at", desc=True).limit(limit).execute()
         
-        # Get message counts for each conversation
-        conversations = []
-        for conv in result.data:
-            # Get message count for this conversation
-            msg_count = supabase.table("messages").select("id", count="exact").eq(
-                "conversation_id", conv["id"]
-            ).execute()
-            
-            conv["message_count"] = msg_count.count or 0
-            conversations.append(conv)
-        
-        return conversations
+        return result.data
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -64,7 +49,7 @@ async def list_conversations(
 @router.get("/{conversation_id}", response_model=ConversationResponse)
 async def get_conversation(
     conversation_id: int,
-    user_id: str  # TODO: Get from auth dependency
+    user_id: str = Depends(get_current_user_id)
 ):
     """Get specific conversation"""
     try:
@@ -75,16 +60,7 @@ async def get_conversation(
         if not result.data:
             raise HTTPException(status_code=404, detail="Conversation not found")
         
-        conversation = result.data[0]
-        
-        # Get actual message count
-        msg_count = supabase.table("messages").select("id", count="exact").eq(
-            "conversation_id", conversation_id
-        ).execute()
-        
-        conversation["message_count"] = msg_count.count or 0
-        
-        return conversation
+        return result.data[0]
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -92,7 +68,7 @@ async def get_conversation(
 @router.delete("/{conversation_id}")
 async def delete_conversation(
     conversation_id: int,
-    user_id: str  # TODO: Get from auth dependency
+    user_id: str = Depends(get_current_user_id)
 ):
     """Delete conversation and all its messages"""
     try:
@@ -112,7 +88,7 @@ async def delete_conversation(
 @router.get("/{conversation_id}/messages")
 async def get_conversation_messages(
     conversation_id: int,
-    user_id: str  # TODO: Get from auth dependency
+    user_id: str = Depends(get_current_user_id)
 ):
     """Get all messages in a conversation"""
     try:

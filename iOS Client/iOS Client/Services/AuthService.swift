@@ -212,10 +212,7 @@ class AuthService: ObservableObject {
         let newProfile = UserProfile(
             id: user.id,
             email: user.email,
-            displayName: nil,
-            avatarUrl: nil,
-            createdAt: Date(),
-            updatedAt: nil
+            createdAt: Date()
         )
         
         do {
@@ -233,7 +230,7 @@ class AuthService: ObservableObject {
         }
     }
     
-    func updateProfile(displayName: String?, avatarUrl: String?) async throws {
+    func updateProfile(email: String?) async throws {
         guard let userId = currentUser?.id else {
             throw AuthError.notAuthenticated
         }
@@ -244,9 +241,7 @@ class AuthService: ObservableObject {
             let updatedProfile: UserProfile = try await client
                 .from("profiles")
                 .update([
-                    "display_name": displayName,
-                    "avatar_url": avatarUrl,
-                    "updated_at": Date().ISO8601Format()
+                    "email": email
                 ])
                 .eq("id", value: userId)
                 .select()
@@ -274,9 +269,6 @@ class AuthService: ObservableObject {
     }
     
     var userDisplayName: String {
-        if let displayName = userProfile?.displayName, !displayName.isEmpty {
-            return displayName
-        }
         if let email = currentUser?.email {
             return email
         }

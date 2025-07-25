@@ -82,17 +82,11 @@ struct ConversationListView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: { showingProfile = true }) {
-                        AsyncImage(url: URL(string: authService.userProfile?.avatarUrl ?? "")) { image in
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        } placeholder: {
-                            Image(systemName: "person.circle.fill")
-                                .font(.title2)
-                                .foregroundColor(.blue)
-                        }
-                        .frame(width: 32, height: 32)
-                        .clipShape(Circle())
+                        Image(systemName: "person.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(.blue)
+                            .frame(width: 32, height: 32)
+                            .clipShape(Circle())
                     }
                 }
                 
@@ -177,11 +171,10 @@ struct ConversationListView: View {
                     isLoading = false
                     // Fall back to creating a mock conversation on error
                     let mockConversation = Conversation(
-                        id: Int.random(in: 1000...9999),
-                        userId: authService.currentUser?.id.uuidString ?? "mock-user",
+                        id: Int64.random(in: 1000...9999),
+                        userId: authService.currentUser?.id ?? UUID(),
                         createdAt: Date(),
-                        messages: [],
-                        messageCount: 0
+                        messages: []
                     )
                     conversations.insert(mockConversation, at: 0)
                     showingNewConversation = true

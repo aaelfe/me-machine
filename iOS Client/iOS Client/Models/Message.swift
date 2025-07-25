@@ -8,8 +8,8 @@
 import Foundation
 
 struct Message: Identifiable, Codable {
-    let id: Int
-    let conversationId: Int
+    let id: Int64  // Changed to Int64 to match bigint in database
+    let conversationId: Int64  // Changed to Int64 to match bigint in database
     let role: MessageRole
     let content: String
     let createdAt: Date

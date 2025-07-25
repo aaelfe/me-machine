@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import Supabase
 
 @MainActor
 class APIService: ObservableObject {
@@ -17,11 +18,40 @@ class APIService: ObservableObject {
     
     private init() {}
     
+    // MARK: - Auth Helper
+    
+    private func getAuthToken() async throws -> String? {
+        let authService = AuthService.shared
+        let user = await MainActor.run {
+            return authService.currentUser
+        }
+        
+        guard user != nil else {
+            throw APIError.notAuthenticated
+        }
+        
+        // Get the current session token from Supabase
+        let client = SupabaseClient(
+            supabaseURL: URL(string: SupabaseConfig.url)!,
+            supabaseKey: SupabaseConfig.anonKey
+        )
+        
+        let session = try await client.auth.session
+        return session.accessToken
+    }
+    
     // MARK: - Conversations
     
-    func fetchConversations(userId: String) async throws -> [Conversation] {
-        let url = URL(string: "\(baseURL)/conversations/?user_id=\(userId)")!
-        let (data, _) = try await session.data(from: url)
+    func fetchConversations() async throws -> [Conversation] {
+        let url = URL(string: "\(baseURL)/api/v1/conversations/")!
+        var request = URLRequest(url: url)
+        
+        // Add auth header
+        if let token = try? await getAuthToken() {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        
+        let (data, _) = try await session.data(for: request)
         
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
@@ -29,14 +59,16 @@ class APIService: ObservableObject {
         return try decoder.decode([Conversation].self, from: data)
     }
     
-    func createConversation(userId: String) async throws -> Conversation {
-        let url = URL(string: "\(baseURL)/conversations/")!
+    func createConversation() async throws -> Conversation {
+        let url = URL(string: "\(baseURL)/api/v1/conversations/")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
-        let body = ["user_id": userId]
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        // Add auth header
+        if let token = try? await getAuthToken() {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
         
         let (data, _) = try await session.data(for: request)
         
@@ -46,9 +78,16 @@ class APIService: ObservableObject {
         return try decoder.decode(Conversation.self, from: data)
     }
     
-    func fetchConversationMessages(conversationId: Int, userId: String) async throws -> [Message] {
-        let url = URL(string: "\(baseURL)/conversations/\(conversationId)/messages?user_id=\(userId)")!
-        let (data, _) = try await session.data(from: url)
+    func fetchConversationMessages(conversationId: Int64) async throws -> [Message] {
+        let url = URL(string: "\(baseURL)/api/v1/conversations/\(conversationId)/messages")!
+        var request = URLRequest(url: url)
+        
+        // Add auth header
+        if let token = try? await getAuthToken() {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        
+        let (data, _) = try await session.data(for: request)
         
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
@@ -57,13 +96,36 @@ class APIService: ObservableObject {
         return response.messages
     }
     
+    func deleteConversation(conversationId: Int64) async throws {
+        let url = URL(string: "\(baseURL)/api/v1/conversations/\(conversationId)")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        
+        // Add auth header
+        if let token = try? await getAuthToken() {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        
+        let (_, response) = try await session.data(for: request)
+        
+        if let httpResponse = response as? HTTPURLResponse,
+           httpResponse.statusCode != 200 {
+            throw APIError.networkError
+        }
+    }
+    
     // MARK: - Chat
     
-    func sendMessage(content: String, conversationId: Int?, userId: String) async throws -> ChatResponse {
-        let url = URL(string: "\(baseURL)/chat/message")!
+    func sendMessage(content: String, conversationId: Int64?) async throws -> ChatResponse {
+        let url = URL(string: "\(baseURL)/api/v1/chat/message")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        // Add auth header
+        if let token = try? await getAuthToken() {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
         
         let chatRequest = ChatRequest(
             message: content,
@@ -75,11 +137,6 @@ class APIService: ObservableObject {
         let encoder = JSONEncoder()
         request.httpBody = try encoder.encode(chatRequest)
         
-        // Add user_id as query parameter for now (until auth is implemented)
-        var components = URLComponents(url: url, resolvingAgainstBaseURL: false)!
-        components.queryItems = [URLQueryItem(name: "user_id", value: userId)]
-        request.url = components.url
-        
         let (data, _) = try await session.data(for: request)
         
         let decoder = JSONDecoder()
@@ -89,11 +146,30 @@ class APIService: ObservableObject {
     }
 }
 
+// MARK: - Custom Errors
+
+enum APIError: Error, LocalizedError {
+    case notAuthenticated
+    case invalidResponse
+    case networkError
+    
+    var errorDescription: String? {
+        switch self {
+        case .notAuthenticated:
+            return "User not authenticated"
+        case .invalidResponse:
+            return "Invalid response from server"
+        case .networkError:
+            return "Network error occurred"
+        }
+    }
+}
+
 // MARK: - Request/Response Models
 
 struct ChatRequest: Codable {
     let message: String
-    let conversationId: Int?
+    let conversationId: Int64?
     let returnAudio: Bool
     let contextType: String
     
@@ -107,7 +183,7 @@ struct ChatRequest: Codable {
 
 struct ChatResponse: Codable {
     let message: String
-    let conversationId: Int
+    let conversationId: Int64
     let audioUrl: String?
     let suggestions: [String]?
     
@@ -120,7 +196,7 @@ struct ChatResponse: Codable {
 }
 
 struct ConversationMessagesResponse: Codable {
-    let conversationId: Int
+    let conversationId: Int64
     let messages: [Message]
     
     enum CodingKeys: String, CodingKey {

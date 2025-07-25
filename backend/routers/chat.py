@@ -1,9 +1,10 @@
 # routers/chat.py
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
 from config import supabase, settings
+from .auth import get_current_user_id
 import openai
 
 router = APIRouter()
@@ -26,7 +27,7 @@ class ChatResponse(BaseModel):
 @router.post("/message", response_model=ChatResponse)
 async def send_text_message(
     request: ChatRequest,
-    user_id: str  # TODO: Get from auth dependency
+    user_id: str = Depends(get_current_user_id)
 ):
     """Send text message and get AI response"""
     try:
@@ -99,7 +100,7 @@ async def send_text_message(
 @router.get("/conversation/{conversation_id}")
 async def get_conversation(
     conversation_id: int,
-    user_id: str  # TODO: Get from auth dependency
+    user_id: str = Depends(get_current_user_id)
 ):
     """Get conversation history"""
     try:

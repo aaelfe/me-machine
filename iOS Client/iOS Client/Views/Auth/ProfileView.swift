@@ -23,17 +23,11 @@ struct ProfileView: View {
                 Section {
                     HStack(spacing: 16) {
                         // Avatar
-                        AsyncImage(url: URL(string: authService.userProfile?.avatarUrl ?? "")) { image in
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        } placeholder: {
-                            Image(systemName: "person.circle.fill")
-                                .font(.system(size: 60))
-                                .foregroundColor(.gray)
-                        }
-                        .frame(width: 60, height: 60)
-                        .clipShape(Circle())
+                        Image(systemName: "person.circle.fill")
+                            .font(.system(size: 60))
+                            .foregroundColor(.gray)
+                            .frame(width: 60, height: 60)
+                            .clipShape(Circle())
                         
                         VStack(alignment: .leading, spacing: 4) {
                             Text(authService.userDisplayName)
@@ -60,7 +54,7 @@ struct ProfileView: View {
                         
                         Button("Edit") {
                             isEditing = true
-                            displayName = authService.userProfile?.displayName ?? ""
+                            displayName = authService.userProfile?.email ?? ""
                         }
                         .buttonStyle(.bordered)
                     }
@@ -182,8 +176,10 @@ struct EditProfileView: View {
         NavigationView {
             Form {
                 Section("Profile Information") {
-                    TextField("Display Name", text: $displayName)
+                    TextField("Email", text: $displayName)
                         .disabled(authService.isLoading)
+                        .keyboardType(.emailAddress)
+                        .autocapitalization(.none)
                 }
             }
             .navigationTitle("Edit Profile")
@@ -209,8 +205,7 @@ struct EditProfileView: View {
         Task {
             do {
                 try await authService.updateProfile(
-                    displayName: displayName.isEmpty ? nil : displayName,
-                    avatarUrl: nil
+                    email: displayName.isEmpty ? nil : displayName
                 )
                 dismiss()
             } catch {
