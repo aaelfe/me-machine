@@ -43,7 +43,7 @@ class AuthService: ObservableObject {
     private func setupAuthStateListener() {
         Task {
             for await (event, session) in client.auth.authStateChanges {
-                await MainActor.run {
+                _ = await MainActor.run {
                     Task {
                         switch event {
                         case .signedIn:
@@ -98,24 +98,13 @@ class AuthService: ObservableObject {
     
     // MARK: - Authentication Methods
     
-    func signInAnonymously() async throws {
-        isLoading = true
-        authError = nil
-        
-        do {
-            _ = try await client.auth.signInAnonymously()
-            // Auth state listener will handle the rest
-        } catch {
-            authError = error.localizedDescription
-            throw error
-        }
-        
-        isLoading = false
-    }
-    
     func signUpWithEmail(_ email: String, password: String) async throws {
         isLoading = true
         authError = nil
+        
+        defer {
+            isLoading = false
+        }
         
         do {
             _ = try await client.auth.signUp(email: email, password: password)
@@ -124,13 +113,15 @@ class AuthService: ObservableObject {
             authError = error.localizedDescription
             throw error
         }
-        
-        isLoading = false
     }
     
     func signInWithEmail(_ email: String, password: String) async throws {
         isLoading = true
         authError = nil
+        
+        defer {
+            isLoading = false
+        }
         
         do {
             _ = try await client.auth.signIn(email: email, password: password)
@@ -139,8 +130,6 @@ class AuthService: ObservableObject {
             authError = error.localizedDescription
             throw error
         }
-        
-        isLoading = false
     }
     
     func signInWithApple() async throws {
@@ -159,6 +148,10 @@ class AuthService: ObservableObject {
         isLoading = true
         authError = nil
         
+        defer {
+            isLoading = false
+        }
+        
         do {
             try await client.auth.signOut()
             // Auth state listener will handle the rest
@@ -166,13 +159,15 @@ class AuthService: ObservableObject {
             authError = error.localizedDescription
             throw error
         }
-        
-        isLoading = false
     }
     
     func resetPassword(email: String) async throws {
         isLoading = true
         authError = nil
+        
+        defer {
+            isLoading = false
+        }
         
         do {
             try await client.auth.resetPasswordForEmail(email)
@@ -180,8 +175,6 @@ class AuthService: ObservableObject {
             authError = error.localizedDescription
             throw error
         }
-        
-        isLoading = false
     }
     
     // MARK: - Profile Management
@@ -237,6 +230,10 @@ class AuthService: ObservableObject {
         
         isLoading = true
         
+        defer {
+            isLoading = false
+        }
+        
         do {
             let updatedProfile: UserProfile = try await client
                 .from("profiles")
@@ -254,8 +251,6 @@ class AuthService: ObservableObject {
             authError = error.localizedDescription
             throw error
         }
-        
-        isLoading = false
     }
     
     // MARK: - Utility Methods
@@ -264,16 +259,9 @@ class AuthService: ObservableObject {
         try await client.auth.refreshSession()
     }
     
-    var isAnonymous: Bool {
-        currentUser?.isAnonymous ?? false
-    }
-    
     var userDisplayName: String {
         if let email = currentUser?.email {
             return email
-        }
-        if isAnonymous {
-            return "Anonymous User"
         }
         return "User"
     }
