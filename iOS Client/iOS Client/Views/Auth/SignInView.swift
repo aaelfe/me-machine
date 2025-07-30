@@ -111,6 +111,11 @@ struct SignInView: View {
         } message: {
             Text("Enter your email address to receive a password reset link.")
         }
+        .onChange(of: authService.isAuthenticated) { _, isAuthenticated in
+            if isAuthenticated {
+                dismiss()
+            }
+        }
     }
     
     private var isFormValid: Bool {
@@ -121,7 +126,7 @@ struct SignInView: View {
         Task {
             do {
                 try await authService.signInWithEmail(email, password: password)
-                dismiss()
+                // Don't dismiss here - let the onChange observer handle it when auth state changes
             } catch {
                 // Error is handled by AuthService
             }

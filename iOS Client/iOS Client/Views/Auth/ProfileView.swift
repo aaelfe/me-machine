@@ -39,15 +39,7 @@ struct ProfileView: View {
                                     .foregroundColor(.secondary)
                             }
                             
-                            if authService.isAnonymous {
-                                Text("Anonymous User")
-                                    .font(.caption)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 2)
-                                    .background(Color.orange.opacity(0.2))
-                                    .foregroundColor(.orange)
-                                    .cornerRadius(4)
-                            }
+
                         }
                         
                         Spacer()
@@ -74,27 +66,16 @@ struct ProfileView: View {
                         Toggle("", isOn: $isDarkMode)
                     }
                     
-                    if authService.isAnonymous {
-                        Button(action: {}) {
-                            HStack {
-                                Image(systemName: "person.badge.plus")
-                                    .foregroundColor(.blue)
-                                Text("Create Account")
-                                    .foregroundColor(.blue)
-                            }
-                        }
-                    }
+
                 }
                 
                 // Account Actions
                 Section("Account") {
-                    if !authService.isAnonymous {
-                        Button(action: {}) {
-                            HStack {
-                                Image(systemName: "key")
-                                    .foregroundColor(.orange)
-                                Text("Change Password")
-                            }
+                    Button(action: {}) {
+                        HStack {
+                            Image(systemName: "key")
+                                .foregroundColor(.orange)
+                            Text("Change Password")
                         }
                     }
                     
