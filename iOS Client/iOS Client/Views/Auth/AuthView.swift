@@ -137,8 +137,6 @@ struct AuthView: View {
                                     .foregroundColor(.white)
                                     .clipShape(RoundedRectangle(cornerRadius: 12))
                                 }
-                                .disabled(true)
-                                .opacity(0.6)
                             }
                         }
                         .padding(24)
@@ -197,7 +195,14 @@ struct AuthView: View {
     }
     
     private func signInWithGoogle() {
-        // TODO: Implement Google Sign In
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let rootViewController = windowScene.windows.first?.rootViewController else {
+            return
+        }
+        
+        Task {
+            try await authService.signInWithGoogle(presentingViewController: rootViewController)
+        }
     }
 }
 

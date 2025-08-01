@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import Supabase
+@preconcurrency import GoogleSignIn
 
 @MainActor
 class AuthService: ObservableObject {
@@ -43,20 +44,25 @@ class AuthService: ObservableObject {
     private func setupAuthStateListener() {
         Task {
             for await (event, session) in client.auth.authStateChanges {
+                print("Auth state change: \(event), session user: \(session?.user.id.uuidString ?? "nil")")
                 _ = await MainActor.run {
                     Task {
                         switch event {
                         case .signedIn:
+                            print("Handling signed in event")
                             if let session = session {
                                 await self.handleUserSignedIn(session.user)
                             }
                         case .signedOut:
+                            print("Handling signed out event")
                             await self.handleUserSignedOut()
                         case .tokenRefreshed:
+                            print("Handling token refresh event")
                             if let session = session {
                                 await self.handleUserSignedIn(session.user)
                             }
                         default:
+                            print("Other auth event: \(event)")
                             break
                         }
                     }
@@ -75,9 +81,11 @@ class AuthService: ObservableObject {
     }
     
     private func handleUserSignedIn(_ user: User) async {
+        print("handleUserSignedIn called for user: \(user.id)")
         self.currentUser = AuthUser(from: user)
         self.isAuthenticated = true
         self.authError = nil
+        print("Set isAuthenticated to true")
         
         // Load user profile
         await loadUserProfile()
@@ -138,10 +146,45 @@ class AuthService: ObservableObject {
         throw AuthError.notImplemented
     }
     
-    func signInWithGoogle() async throws {
-        // TODO: Implement Google Sign In
-        // This would use Supabase's Google OAuth integration
-        throw AuthError.notImplemented
+    func signInWithGoogle(presentingViewController: UIViewController) async throws {
+        isLoading = true
+        authError = nil
+        
+        defer {
+            isLoading = false
+        }
+        
+        do {
+            print("Starting Google Sign-In...")
+            let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController)
+            print("Google Sign-In successful, got result")
+            
+            guard let idToken = result.user.idToken?.tokenString else {
+                print("No idToken found.")
+                authError = "Failed to get ID token from Google"
+                return
+            }
+            
+            let accessToken = result.user.accessToken.tokenString
+            print("Got tokens, signing in with Supabase...")
+            
+            let response = try await client.auth.signInWithIdToken(
+                credentials: OpenIDConnectCredentials(
+                    provider: .google,
+                    idToken: idToken,
+                    accessToken: accessToken,
+                    nonce: nil
+                )
+            )
+            
+            print("Supabase sign-in successful, session: \(response.user.id.uuidString)")
+            // Auth state listener should handle the rest automatically
+            
+        } catch {
+            print("Google Sign-In error: \(error)")
+            authError = error.localizedDescription
+            throw error
+        }
     }
     
     func signOut() async throws {

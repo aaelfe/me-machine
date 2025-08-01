@@ -13,6 +13,8 @@
 		7B814C9B2E32FACE00D74774 /* Realtime in Frameworks */ = {isa = PBXBuildFile; productRef = 7B814C9A2E32FACE00D74774 /* Realtime */; };
 		7B814C9D2E32FACE00D74774 /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = 7B814C9C2E32FACE00D74774 /* Storage */; };
 		7B814C9F2E32FACE00D74774 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 7B814C9E2E32FACE00D74774 /* Supabase */; };
+		7B814CAF2E3C4D0900D74774 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 7B814CAE2E3C4D0900D74774 /* GoogleSignIn */; };
+		7B814CB12E3C4D0900D74774 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 7B814CB02E3C4D0900D74774 /* GoogleSignInSwift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -36,6 +38,7 @@
 		7B1D5C292E2DF2F100795E8E /* MeMachine.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MeMachine.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7B1D5C362E2DF2F300795E8E /* MeMachineTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MeMachineTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7B1D5C402E2DF2F300795E8E /* MeMachineUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MeMachineUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		7B814CB22E3C56F700D74774 /* MeMachine-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "MeMachine-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -64,9 +67,11 @@
 				7B814C992E32FACE00D74774 /* PostgREST in Frameworks */,
 				7B814C972E32FACE00D74774 /* Functions in Frameworks */,
 				7B814C9F2E32FACE00D74774 /* Supabase in Frameworks */,
+				7B814CB12E3C4D0900D74774 /* GoogleSignInSwift in Frameworks */,
 				7B814C952E32FACE00D74774 /* Auth in Frameworks */,
 				7B814C9D2E32FACE00D74774 /* Storage in Frameworks */,
 				7B814C9B2E32FACE00D74774 /* Realtime in Frameworks */,
+				7B814CAF2E3C4D0900D74774 /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -90,6 +95,7 @@
 		7B1D5C202E2DF2F100795E8E = {
 			isa = PBXGroup;
 			children = (
+				7B814CB22E3C56F700D74774 /* MeMachine-Info.plist */,
 				7B1D5C2B2E2DF2F100795E8E /* iOS Client */,
 				7B1D5C392E2DF2F300795E8E /* iOS ClientTests */,
 				7B1D5C432E2DF2F300795E8E /* iOS ClientUITests */,
@@ -133,6 +139,8 @@
 				7B814C9A2E32FACE00D74774 /* Realtime */,
 				7B814C9C2E32FACE00D74774 /* Storage */,
 				7B814C9E2E32FACE00D74774 /* Supabase */,
+				7B814CAE2E3C4D0900D74774 /* GoogleSignIn */,
+				7B814CB02E3C4D0900D74774 /* GoogleSignInSwift */,
 			);
 			productName = "iOS Client";
 			productReference = 7B1D5C292E2DF2F100795E8E /* MeMachine.app */;
@@ -218,6 +226,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				7B814C932E32FACE00D74774 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				7B814CAD2E3C4D0900D74774 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 7B1D5C2A2E2DF2F100795E8E /* Products */;
@@ -421,6 +430,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "MeMachine-Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -448,6 +458,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "MeMachine-Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -584,6 +595,14 @@
 				minimumVersion = 2.5.1;
 			};
 		};
+		7B814CAD2E3C4D0900D74774 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -616,6 +635,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7B814C932E32FACE00D74774 /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Supabase;
+		};
+		7B814CAE2E3C4D0900D74774 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7B814CAD2E3C4D0900D74774 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		7B814CB02E3C4D0900D74774 /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7B814CAD2E3C4D0900D74774 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
