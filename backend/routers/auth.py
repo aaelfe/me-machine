@@ -157,6 +157,18 @@ async def get_current_user_id(credentials: HTTPAuthorizationCredentials = Depend
     except Exception as e:
         raise HTTPException(status_code=401, detail="Authentication failed")
 
+# WebSocket auth function
+async def get_current_user_id_ws(token: str) -> str:
+    """Extract user ID from token for WebSocket connections"""
+    try:
+        user = supabase.auth.get_user(token)
+        if user and user.user:
+            return user.user.id
+        else:
+            raise Exception("Invalid token")
+    except Exception as e:
+        raise Exception("Authentication failed")
+
 # @router.put("/preferences")
 # async def update_preferences(
 #     preferences: dict,

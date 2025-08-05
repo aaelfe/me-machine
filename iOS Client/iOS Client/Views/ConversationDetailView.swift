@@ -14,7 +14,8 @@ struct ConversationDetailView: View {
     @State private var messages: [Message] = []
     
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var supabaseService = SupabaseService.shared
+    @StateObject private var apiService = APIService.shared
+    @StateObject private var webSocketService = WebSocketService.shared
     
     init(conversation: Conversation) {
         self._conversation = State(initialValue: conversation)
@@ -32,6 +33,13 @@ struct ConversationDetailView: View {
                                 MessageBubble(message: message)
                                     .id(message.id)
                             }
+                            
+                            // Show streaming message if active
+                            if let streamingMessage = apiService.streamingMessage,
+                               streamingMessage.conversationId == conversation.id {
+                                StreamingMessageBubble(streamingMessage: streamingMessage)
+                                    .id("streaming")
+                            }
                         }
                         .padding()
                     }
@@ -39,6 +47,14 @@ struct ConversationDetailView: View {
                         if let lastMessage = messages.last {
                             withAnimation(.easeInOut(duration: 0.3)) {
                                 proxy.scrollTo(lastMessage.id, anchor: .bottom)
+                            }
+                        }
+                    }
+                    .onChange(of: apiService.streamingMessage?.content) {
+                        // Auto-scroll when streaming message updates
+                        if apiService.streamingMessage != nil {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                proxy.scrollTo("streaming", anchor: .bottom)
                             }
                         }
                     }
@@ -74,15 +90,17 @@ struct ConversationDetailView: View {
         .onAppear {
             Task {
                 // Load messages for this conversation
-                try? await supabaseService.fetchMessages(for: conversation.id)
-                // Subscribe to realtime updates for this conversation
-                await supabaseService.subscribeToMessages(conversationId: conversation.id)
+                try? await apiService.fetchConversationMessages(conversationId: conversation.id)
+                
+                // Connect to WebSocket for this conversation
+                try? await webSocketService.connect()
             }
         }
         .onDisappear {
-            supabaseService.unsubscribeAll()
+            // Disconnect WebSocket when leaving conversation
+            webSocketService.disconnect()
         }
-        .onReceive(supabaseService.$currentConversationMessages) { newMessages in
+        .onReceive(apiService.$currentConversationMessages) { newMessages in
             messages = newMessages
         }
     }
@@ -97,14 +115,14 @@ struct ConversationDetailView: View {
         
         Task {
             do {
-                _ = try await supabaseService.sendMessage(
+                _ = try await apiService.sendMessageWithStreaming(
                     content: messageToSend,
                     conversationId: conversation.id
                 )
                 
                 await MainActor.run {
                     isLoading = false
-                    // Messages will be updated via realtime subscription
+                    // Messages will be updated via streaming completion handler
                 }
             } catch {
                 await MainActor.run {
@@ -147,6 +165,57 @@ struct MessageBubble: View {
             }
         }
     }
+}
+
+struct StreamingMessageBubble: View {
+    let streamingMessage: StreamingMessage
+    
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(streamingMessage.content + (streamingMessage.isComplete ? "" : "▊"))
+                    .padding()
+                    .background(Color.purple.opacity(0.2))
+                    .cornerRadius(16)
+                    .animation(.easeInOut(duration: 0.1), value: streamingMessage.content)
+                
+                if streamingMessage.isComplete {
+                    Text(Date(), style: .time)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                } else {
+                    HStack(spacing: 4) {
+                        Text("AI is typing")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        
+                        // Typing indicator
+                        HStack(spacing: 2) {
+                            ForEach(0..<3) { index in
+                                Circle()
+                                    .fill(Color.secondary)
+                                    .frame(width: 4, height: 4)
+                                    .scaleEffect(typingScale)
+                                    .animation(
+                                        .easeInOut(duration: 0.6)
+                                        .repeatForever()
+                                        .delay(Double(index) * 0.2),
+                                        value: typingScale
+                                    )
+                            }
+                        }
+                    }
+                }
+            }
+            
+            Spacer()
+        }
+        .onAppear {
+            typingScale = 1.2
+        }
+    }
+    
+    @State private var typingScale: CGFloat = 1.0
 }
 
 #Preview {

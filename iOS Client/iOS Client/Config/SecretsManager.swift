@@ -42,8 +42,6 @@ struct SecretsManager {
             _ = supabaseURL
             _ = supabaseAnonKey
             return true
-        } catch {
-            return false
         }
     }
     

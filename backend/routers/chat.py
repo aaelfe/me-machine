@@ -1,16 +1,17 @@
 # routers/chat.py
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
 from config import supabase, settings
-from .auth import get_current_user_id
+from .auth import get_current_user_id, get_current_user_id_ws
 import openai
+import json
 
 router = APIRouter()
 
-# Set OpenAI API key
-openai.api_key = settings.OPENAI_API_KEY
+# Initialize OpenAI client
+client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
 
 class ChatRequest(BaseModel):
     message: str
@@ -69,7 +70,7 @@ async def send_text_message(
         messages.append({"role": "user", "content": request.message})
         
         # Get AI response
-        response = await openai.ChatCompletion.acreate(
+        response = client.chat.completions.create(
             model="gpt-4",
             messages=messages,
             max_tokens=500,
@@ -226,3 +227,185 @@ def generate_suggestions(context_type: str, ai_message: str) -> List[str]:
         "What would you like to explore next?",
         "How are you feeling about this?"
     ]
+
+@router.websocket("/ws")
+async def websocket_chat_endpoint(websocket: WebSocket, token: str = None):
+    """WebSocket endpoint for streaming chat responses"""
+    await websocket.accept()
+    
+    try:
+        # Get auth token from query parameter or headers
+        auth_token = token
+        if not auth_token and "authorization" in websocket.headers:
+            auth_token = websocket.headers["authorization"].replace("Bearer ", "")
+        
+        # Try to get token from first message if not in headers/query
+        if not auth_token:
+            try:
+                data = await websocket.receive_text()
+                message_data = json.loads(data)
+                auth_token = message_data.get("auth_token")
+                if not auth_token:
+                    await websocket.send_json({
+                        "type": "error",
+                        "error": "Authentication required"
+                    })
+                    await websocket.close()
+                    return
+            except Exception:
+                await websocket.send_json({
+                    "type": "error",
+                    "error": "Authentication required"
+                })
+                await websocket.close()
+                return
+            
+        # Validate user
+        try:
+            user_id = await get_current_user_id_ws(auth_token)
+        except Exception as e:
+            await websocket.send_json({
+                "type": "error", 
+                "error": "Invalid authentication"
+            })
+            await websocket.close()
+            return
+        
+        while True:
+            # Receive message from client
+            data = await websocket.receive_text()
+            try:
+                message_data = json.loads(data)
+                print(f"Received WebSocket data. Message text: {message_data["message"]}")
+            except json.JSONDecodeError as e:
+                print(f"JSON decode error: {e}")
+                await websocket.send_json({
+                    "type": "error",
+                    "error": f"Invalid JSON format: {str(e)}"
+                })
+                continue
+            
+            # Process streaming chat
+            await handle_streaming_chat(
+                websocket=websocket,
+                user_id=user_id,
+                message=message_data.get("message"),
+                conversation_id=message_data.get("conversation_id"),
+                context_type=message_data.get("context_type", "check_in")
+            )
+            
+    except WebSocketDisconnect:
+        print("WebSocket client disconnected")
+    except Exception as e:
+        print(f"WebSocket error: {e}")
+        # Only try to send error if websocket is still open
+        if websocket.client_state.name == 'CONNECTED':
+            try:
+                await websocket.send_json({
+                    "type": "error",
+                    "error": str(e)
+                })
+            except Exception as send_error:
+                print(f"Failed to send error message: {send_error}")
+        try:
+            await websocket.close()
+        except:
+            pass
+
+async def handle_streaming_chat(
+    websocket: WebSocket,
+    user_id: str,
+    message: str,
+    conversation_id: Optional[int] = None,
+    context_type: str = "check_in"
+):
+    """Handle streaming chat conversation"""
+    try:
+        # Create new conversation if none provided
+        if not conversation_id:
+            conv_result = supabase.table("conversations").insert({
+                "user_id": user_id
+            }).execute()
+            conversation_id = conv_result.data[0]["id"]
+        else:
+            # Verify user owns this conversation
+            conv_check = supabase.table("conversations").select("id").eq(
+                "id", conversation_id
+            ).eq("user_id", user_id).execute()
+            
+            if not conv_check.data:
+                await websocket.send_json({
+                    "type": "error",
+                    "error": "Conversation not found"
+                })
+                return
+        
+        # Get conversation context
+        context_messages = await get_conversation_messages(conversation_id)
+        
+        # Get user's recent check-ins for context
+        user_context = await get_user_context(user_id)
+        
+        # Build system prompt based on context type
+        system_prompt = build_system_prompt(context_type, user_context)
+        
+        # Prepare messages for OpenAI
+        messages = [{"role": "system", "content": system_prompt}]
+        
+        # Add conversation history
+        for msg in context_messages:
+            role = "assistant" if msg["role"] == "ai" else "user"
+            messages.append({"role": role, "content": msg["content"]})
+        
+        # Add current user message
+        messages.append({"role": "user", "content": message})
+        
+        # Save user message first
+        await save_messages(conversation_id, [
+            {"role": "user", "content": message}
+        ])
+        
+        # Stream AI response
+        full_response = ""
+        stream = client.chat.completions.create(
+            model="gpt-4",
+            messages=messages,
+            max_tokens=500,
+            temperature=0.7,
+            stream=True
+        )
+        
+        for chunk in stream:
+            if chunk.choices[0].delta.content:
+                chunk_content = chunk.choices[0].delta.content
+                full_response += chunk_content
+                
+                # Send chunk to client
+                await websocket.send_json({
+                    "type": "message_chunk",
+                    "chunk": chunk_content,
+                    "conversation_id": conversation_id
+                })
+        
+        # Save AI response to database
+        await save_messages(conversation_id, [
+            {"role": "ai", "content": full_response}
+        ])
+        
+        # Send completion message
+        await websocket.send_json({
+            "type": "message_complete",
+            "message": full_response,
+            "conversation_id": conversation_id
+        })
+        
+    except Exception as e:
+        print(f"Streaming chat error: {e}")
+        if websocket.client_state.name == 'CONNECTED':
+            try:
+                await websocket.send_json({
+                    "type": "error",
+                    "error": str(e)
+                })
+            except Exception as send_error:
+                print(f"Failed to send streaming error: {send_error}")

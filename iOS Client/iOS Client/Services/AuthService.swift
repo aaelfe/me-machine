@@ -90,8 +90,8 @@ class AuthService: ObservableObject {
         // Load user profile
         await loadUserProfile()
         
-        // Notify SupabaseService of auth change
-        SupabaseService.shared.handleAuthStateChange(user: user)
+        // Notify APIService of auth change
+        APIService.shared.handleAuthStateChange(user: user)
     }
     
     private func handleUserSignedOut() async {
@@ -100,8 +100,8 @@ class AuthService: ObservableObject {
         self.isAuthenticated = false
         self.authError = nil
         
-        // Notify SupabaseService of auth change
-        SupabaseService.shared.handleAuthStateChange(user: nil)
+        // Notify APIService of auth change
+        APIService.shared.handleAuthStateChange(user: nil)
     }
     
     // MARK: - Authentication Methods
@@ -143,7 +143,7 @@ class AuthService: ObservableObject {
     func signInWithApple() async throws {
         // TODO: Implement Apple Sign In
         // This would use Supabase's Apple OAuth integration
-        throw AuthError.notImplemented
+        throw ServiceError.notImplemented
     }
     
     func signInWithGoogle(presentingViewController: UIViewController) async throws {
@@ -268,7 +268,7 @@ class AuthService: ObservableObject {
     
     func updateProfile(email: String?) async throws {
         guard let userId = currentUser?.id else {
-            throw AuthError.notAuthenticated
+            throw ServiceError.notAuthenticated
         }
         
         isLoading = true
@@ -302,6 +302,15 @@ class AuthService: ObservableObject {
         try await client.auth.refreshSession()
     }
     
+    func getAuthToken() async throws -> String? {
+        guard currentUser != nil else {
+            throw ServiceError.notAuthenticated
+        }
+        
+        let session = try await client.auth.session
+        return session.accessToken
+    }
+    
     var userDisplayName: String {
         if let email = currentUser?.email {
             return email
@@ -310,24 +319,3 @@ class AuthService: ObservableObject {
     }
 }
 
-// MARK: - Custom Errors
-
-enum AuthError: Error, LocalizedError {
-    case notAuthenticated
-    case notImplemented
-    case invalidCredentials
-    case userNotFound
-    
-    var errorDescription: String? {
-        switch self {
-        case .notAuthenticated:
-            return "User not authenticated"
-        case .notImplemented:
-            return "Feature not implemented yet"
-        case .invalidCredentials:
-            return "Invalid email or password"
-        case .userNotFound:
-            return "User not found"
-        }
-    }
-}
