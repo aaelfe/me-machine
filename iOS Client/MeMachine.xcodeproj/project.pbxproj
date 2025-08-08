@@ -15,6 +15,7 @@
 		7B814C9F2E32FACE00D74774 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 7B814C9E2E32FACE00D74774 /* Supabase */; };
 		7B814CAF2E3C4D0900D74774 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 7B814CAE2E3C4D0900D74774 /* GoogleSignIn */; };
 		7B814CB12E3C4D0900D74774 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 7B814CB02E3C4D0900D74774 /* GoogleSignInSwift */; };
+		7B814CB72E459EE300D74774 /* MessageKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7B814CB62E459EE300D74774 /* MessageKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -67,6 +68,7 @@
 				7B814C992E32FACE00D74774 /* PostgREST in Frameworks */,
 				7B814C972E32FACE00D74774 /* Functions in Frameworks */,
 				7B814C9F2E32FACE00D74774 /* Supabase in Frameworks */,
+				7B814CB72E459EE300D74774 /* MessageKit in Frameworks */,
 				7B814CB12E3C4D0900D74774 /* GoogleSignInSwift in Frameworks */,
 				7B814C952E32FACE00D74774 /* Auth in Frameworks */,
 				7B814C9D2E32FACE00D74774 /* Storage in Frameworks */,
@@ -141,6 +143,7 @@
 				7B814C9E2E32FACE00D74774 /* Supabase */,
 				7B814CAE2E3C4D0900D74774 /* GoogleSignIn */,
 				7B814CB02E3C4D0900D74774 /* GoogleSignInSwift */,
+				7B814CB62E459EE300D74774 /* MessageKit */,
 			);
 			productName = "iOS Client";
 			productReference = 7B1D5C292E2DF2F100795E8E /* MeMachine.app */;
@@ -227,6 +230,7 @@
 			packageReferences = (
 				7B814C932E32FACE00D74774 /* XCRemoteSwiftPackageReference "supabase-swift" */,
 				7B814CAD2E3C4D0900D74774 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+				7B814CB52E459EE300D74774 /* XCRemoteSwiftPackageReference "MessageKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 7B1D5C2A2E2DF2F100795E8E /* Products */;
@@ -603,6 +607,14 @@
 				minimumVersion = 9.0.0;
 			};
 		};
+		7B814CB52E459EE300D74774 /* XCRemoteSwiftPackageReference "MessageKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/MessageKit/MessageKit";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -645,6 +657,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7B814CAD2E3C4D0900D74774 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
 			productName = GoogleSignInSwift;
+		};
+		7B814CB62E459EE300D74774 /* MessageKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7B814CB52E459EE300D74774 /* XCRemoteSwiftPackageReference "MessageKit" */;
+			productName = MessageKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
