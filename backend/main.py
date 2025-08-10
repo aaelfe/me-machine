@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from middleware import supabase_auth_middleware
 
-from routers import voice, chat, conversations, auth, health
+from routers import voice, chat, auth, health
 
 app = FastAPI(
     title="Me Machine API", 
@@ -26,7 +26,6 @@ app.middleware("http")(supabase_auth_middleware)
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["authentication"])
 app.include_router(voice.router, prefix="/api/v1/voice", tags=["voice"])
 app.include_router(chat.router, prefix="/api/v1/chat", tags=["chat"])
-app.include_router(conversations.router, prefix="/api/v1/conversations", tags=["conversations"])
 app.include_router(health.router, tags=["health"])
 
 if __name__ == "__main__":

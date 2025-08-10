@@ -10,12 +10,6 @@ from config import supabase, settings
 
 router = APIRouter()
 
-class VoiceCloneResponse(BaseModel):
-    id: int  # Changed to int to match bigint
-    name: str
-    elevenlabs_voice_id: Optional[str]
-    is_active: bool
-    created_at: datetime
 
 class VoiceMessageRequest(BaseModel):
     text: str
@@ -65,7 +59,7 @@ async def get_audio_file(audio_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/clone", response_model=VoiceCloneResponse)
+@router.post("/clone")
 async def create_voice_clone(
     voice_samples: List[UploadFile] = File(...),
     voice_name: str = Form(...),
@@ -93,40 +87,6 @@ async def create_voice_clone(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/clones", response_model=List[VoiceCloneResponse])
-async def list_voice_clones(
-    user_id: str  # TODO: Get from auth dependency
-):
-    """List user's voice clones"""
-    try:
-        result = supabase.table("voice_clones").select("*").eq(
-            "user_id", user_id
-        ).eq("is_active", True).execute()
-        
-        return result.data
-    
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@router.delete("/clones/{voice_clone_id}")
-async def delete_voice_clone(
-    voice_clone_id: int,  # Changed to int
-    user_id: str  # TODO: Get from auth dependency
-):
-    """Delete a voice clone"""
-    try:
-        # Soft delete - mark as inactive
-        result = supabase.table("voice_clones").update({
-            "is_active": False
-        }).eq("id", voice_clone_id).eq("user_id", user_id).execute()
-        
-        if not result.data:
-            raise HTTPException(status_code=404, detail="Voice clone not found")
-        
-        return {"message": "Voice clone deleted successfully"}
-    
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/synthesize")
 async def synthesize_speech(
