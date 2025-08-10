@@ -15,6 +15,7 @@ struct ConversationDetailView: View {
     
     @Environment(\.dismiss) private var dismiss
     @StateObject private var apiService = APIService.shared
+    @StateObject private var supabaseService = SupabaseService.shared
     @StateObject private var webSocketService = WebSocketService.shared
     
     init(conversation: Conversation) {
@@ -90,7 +91,7 @@ struct ConversationDetailView: View {
         .onAppear {
             Task {
                 // Load messages for this conversation
-                try? await apiService.fetchConversationMessages(conversationId: conversation.id)
+                try? await supabaseService.fetchConversationMessages(conversationId: conversation.id)
                 
                 // Connect to WebSocket for this conversation
                 try? await webSocketService.connect()
@@ -100,7 +101,7 @@ struct ConversationDetailView: View {
             // Disconnect WebSocket when leaving conversation
             webSocketService.disconnect()
         }
-        .onReceive(apiService.$currentConversationMessages) { newMessages in
+        .onReceive(supabaseService.$currentConversationMessages) { newMessages in
             messages = newMessages
         }
     }

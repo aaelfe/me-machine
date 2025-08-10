@@ -16,9 +16,8 @@ class APIService: ObservableObject {
     private let baseURL = SupabaseConfig.backendURL
     private let session = URLSession.shared
     private let webSocketService = WebSocketService.shared
+    private let supabaseService = SupabaseService.shared
     
-    @Published var conversations: [Conversation] = []
-    @Published var currentConversationMessages: [Message] = []
     @Published var streamingMessage: StreamingMessage?
     
     private var cancellables = Set<AnyCancellable>()
@@ -40,94 +39,6 @@ class APIService: ObservableObject {
         }
     }
     
-    // MARK: - Conversations
-    
-    func fetchConversations() async throws -> [Conversation] {
-        guard let url = URL(string: "http://\(baseURL)/api/v1/conversations/") else {
-            throw ServiceError.invalidURL
-        }
-        var request = URLRequest(url: url)
-        
-        // Add auth header
-        if let token = try? await getAuthToken() {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        }
-        
-        let (data, _) = try await session.data(for: request)
-        
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        
-        let result = try decoder.decode([Conversation].self, from: data)
-        self.conversations = result
-        return result
-    }
-    
-    func createConversation() async throws -> Conversation {
-        guard let url = URL(string: "http://\(baseURL)/api/v1/conversations/") else {
-            throw ServiceError.invalidURL
-        }
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        // Add auth header
-        if let token = try? await getAuthToken() {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        }
-        
-        let (data, _) = try await session.data(for: request)
-        
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        
-        let conversation = try decoder.decode(Conversation.self, from: data)
-        self.conversations.insert(conversation, at: 0)
-        return conversation
-    }
-    
-    func fetchConversationMessages(conversationId: Int64) async throws -> [Message] {
-        guard let url = URL(string: "http://\(baseURL)/api/v1/conversations/\(conversationId)/messages") else {
-            throw ServiceError.invalidURL
-        }
-        var request = URLRequest(url: url)
-        
-        // Add auth header
-        if let token = try? await getAuthToken() {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        }
-        
-        let (data, _) = try await session.data(for: request)
-        
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        
-        let response = try decoder.decode(ConversationMessagesResponse.self, from: data)
-        self.currentConversationMessages = response.messages
-        return response.messages
-    }
-    
-    func deleteConversation(conversationId: Int64) async throws {
-        guard let url = URL(string: "http://\(baseURL)/api/v1/conversations/\(conversationId)") else {
-            throw ServiceError.invalidURL
-        }
-        var request = URLRequest(url: url)
-        request.httpMethod = "DELETE"
-        
-        // Add auth header
-        if let token = try? await getAuthToken() {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        }
-        
-        let (_, response) = try await session.data(for: request)
-        
-        if let httpResponse = response as? HTTPURLResponse,
-           httpResponse.statusCode != 200 {
-            throw ServiceError.networkError
-        }
-        
-        self.conversations.removeAll { $0.id == conversationId }
-    }
     
     // MARK: - Chat
     
@@ -173,7 +84,7 @@ class APIService: ObservableObject {
                 onMessageComplete: { @Sendable [weak self] finalMessage, responseConversationId in
                     Task { @MainActor in
                         // Refresh messages when streaming is complete
-                        try? await self?.fetchConversationMessages(conversationId: responseConversationId)
+                        try? await self?.supabaseService.fetchConversationMessages(conversationId: responseConversationId)
                     }
                 }
             )
@@ -187,7 +98,7 @@ class APIService: ObservableObject {
             )
             
             // Refresh messages to get the latest state from backend
-            _ = try await fetchConversationMessages(conversationId: conversationId)
+            _ = try await supabaseService.fetchConversationMessages(conversationId: conversationId)
         }
         
         // Return a mock message since the backend doesn't return the saved message directly
@@ -205,11 +116,8 @@ class APIService: ObservableObject {
     // MARK: - Auth State Management
     
     func handleAuthStateChange(user: User?) {
-        if user == nil {
-            // User signed out - clear data
-            conversations = []
-            currentConversationMessages = []
-        }
+        // Auth state changes are now handled by SupabaseService
+        // APIService only handles streaming messages
     }
 }
 
@@ -286,12 +194,3 @@ struct ChatResponse: Codable {
     }
 }
 
-struct ConversationMessagesResponse: Codable {
-    let conversationId: Int64
-    let messages: [Message]
-    
-    enum CodingKeys: String, CodingKey {
-        case conversationId = "conversation_id"
-        case messages
-    }
-}

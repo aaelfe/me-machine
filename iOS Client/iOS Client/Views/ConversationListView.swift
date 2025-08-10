@@ -13,7 +13,7 @@ struct ConversationListView: View {
     @State private var showingNewConversation = false
     @State private var showingProfile = false
     
-    @StateObject private var apiService = APIService.shared
+    @StateObject private var supabaseService = SupabaseService.shared
     @StateObject private var authService = AuthService.shared
     @AppStorage("isDarkMode") private var isDarkMode = false
     
@@ -118,7 +118,7 @@ struct ConversationListView: View {
         .onAppear {
             loadConversations()
         }
-        .onReceive(apiService.$conversations) { newConversations in
+        .onReceive(supabaseService.$conversations) { newConversations in
             conversations = newConversations
         }
         .sheet(isPresented: $showingNewConversation) {
@@ -136,7 +136,7 @@ struct ConversationListView: View {
         
         Task {
             do {
-                _ = try await apiService.fetchConversations()
+                _ = try await supabaseService.fetchConversations()
                 
                 await MainActor.run {
                     isLoading = false
@@ -157,7 +157,7 @@ struct ConversationListView: View {
         
         Task {
             do {
-                _ = try await apiService.createConversation()
+                _ = try await supabaseService.createConversation()
                 
                 await MainActor.run {
                     isLoading = false

@@ -89,9 +89,6 @@ class AuthService: ObservableObject {
         
         // Load user profile
         await loadUserProfile()
-        
-        // Notify APIService of auth change
-        APIService.shared.handleAuthStateChange(user: user)
     }
     
     private func handleUserSignedOut() async {
@@ -99,9 +96,6 @@ class AuthService: ObservableObject {
         self.userProfile = nil
         self.isAuthenticated = false
         self.authError = nil
-        
-        // Notify APIService of auth change
-        APIService.shared.handleAuthStateChange(user: nil)
     }
     
     // MARK: - Authentication Methods
