@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package chat;
+
+option go_package = "github.com/yourorg/chat/proto";
+option java_package = "com.yourorg.chat.proto";
+
+// Core message structure for bidirectional communication
+message ChatMessage {
+  // Protocol version for backward compatibility
+  uint32 version = 1;
+  
+  // Unique identifier for this message
+  string message_id = 2;
+  
+  // Unix timestamp in milliseconds
+  int64 timestamp_ms = 3;
+  
+  // Identifies the sender (user_id or ai_service_id)
+  string sender_id = 4;
+  
+  // Groups related messages together
+  string conversation_id = 5;
+  
+  // Message type determines which content field is populated
+  MessageType message_type = 6;
+  
+  // Content payload - only one should be set based on message_type
+  oneof content {
+    TextContent text_content = 7;
+    AudioContent audio_content = 8;
+  }
+  
+  // Reserved for future extensions
+  reserved 9 to 15;
+}
+
+// Enum for message types
+enum MessageType {
+  MESSAGE_TYPE_UNSPECIFIED = 0;
+  MESSAGE_TYPE_TEXT = 1;
+  MESSAGE_TYPE_AUDIO = 2;
+}
+
+// Text message content
+message TextContent {
+  string text = 1;
+  
+  // Reserved for future: formatting, mentions, etc.
+  reserved 2 to 5;
+}
+
+// Audio message content
+message AudioContent {
+  // Raw audio bytes
+  bytes audio_data = 1;
+  
+  // Audio format specification
+  AudioFormat format = 2;
+  
+  // Duration in milliseconds (optional, for UI hints)
+  uint32 duration_ms = 3;
+  
+  // Reserved for future: transcription, language hints, etc.
+  reserved 4 to 10;
+}
+
+// Audio format specification
+enum AudioFormat {
+  AUDIO_FORMAT_UNSPECIFIED = 0;
+  AUDIO_FORMAT_OPUS = 1;      // Recommended for voice
+  AUDIO_FORMAT_WEBM_OPUS = 2; // WebM container with Opus
+  AUDIO_FORMAT_MP3 = 3;        // Fallback compatibility
+  AUDIO_FORMAT_PCM_16KHZ = 4;  // Raw PCM 16-bit 16kHz mono
+}

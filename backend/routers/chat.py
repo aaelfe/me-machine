@@ -7,6 +7,22 @@ from config import supabase, settings
 from .auth import get_current_user_id, get_current_user_id_ws
 import openai
 import json
+from typing import cast
+
+try:
+    # Optional import; endpoint will error with guidance if not generated
+    from proto_utils.serialization import (
+        encode_chat_chunk,
+        encode_chat_complete,
+        encode_error,
+        ProtobufUnavailable,
+    )
+except Exception:
+    encode_chat_chunk = None  # type: ignore
+    encode_chat_complete = None  # type: ignore
+    encode_error = None  # type: ignore
+    class ProtobufUnavailable(RuntimeError):
+        ...
 
 router = APIRouter()
 
@@ -398,6 +414,165 @@ async def handle_streaming_chat(
             "message": full_response,
             "conversation_id": conversation_id
         })
+
+
+@router.websocket("/ws-bin")
+async def websocket_chat_proto_endpoint(websocket: WebSocket, token: str = None):
+    """WebSocket endpoint that streams protobuf binary frames.
+
+    Requires generated Python module at `backend/proto_gen/chat_stream_pb2.py`.
+    See proto/README.md for generation instructions.
+    """
+    await websocket.accept()
+
+    # Quick guard: ensure protobuf helpers are available
+    if encode_chat_chunk is None or encode_chat_complete is None or encode_error is None:
+        await websocket.send_bytes(b"")  # trigger client read
+        await websocket.close(code=1011)
+        return
+
+    try:
+        # Get auth token from query parameter or headers
+        auth_token = token
+        if not auth_token and "authorization" in websocket.headers:
+            auth_token = websocket.headers["authorization"].replace("Bearer ", "")
+
+        # Try to get token from first message if not in headers/query
+        if not auth_token:
+            try:
+                data = await websocket.receive_text()
+                message_data = json.loads(data)
+                auth_token = message_data.get("auth_token")
+                if not auth_token:
+                    await websocket.close(code=1008)
+                    return
+            except Exception:
+                await websocket.close(code=1008)
+                return
+
+        # Validate user
+        try:
+            user_id = await get_current_user_id_ws(cast(str, auth_token))
+        except Exception:
+            await websocket.close(code=1008)
+            return
+
+        while True:
+            # Receive message from client (JSON for request envelope)
+            data = await websocket.receive_text()
+            try:
+                message_data = json.loads(data)
+            except json.JSONDecodeError as e:
+                # Send protobuf error then continue
+                try:
+                    err_bytes = encode_error(
+                        conversation_id=0,
+                        message=f"Invalid JSON: {str(e)}",
+                        code=400,
+                    )
+                    await websocket.send_bytes(err_bytes)
+                except ProtobufUnavailable:
+                    pass
+                continue
+
+            # Process streaming chat (same as JSON endpoint but binary out)
+            conversation_id = message_data.get("conversation_id")
+            context_type = message_data.get("context_type", "check_in")
+            message = message_data.get("message")
+
+            # Create or validate conversation
+            if not conversation_id:
+                conv_result = supabase.table("conversations").insert({
+                    "user_id": user_id
+                }).execute()
+                conversation_id = conv_result.data[0]["id"]
+            else:
+                conv_check = supabase.table("conversations").select("id").eq(
+                    "id", conversation_id
+                ).eq("user_id", user_id).execute()
+                if not conv_check.data:
+                    err_bytes = encode_error(
+                        conversation_id=0,
+                        message="Conversation not found",
+                        code=404,
+                    )
+                    await websocket.send_bytes(err_bytes)
+                    continue
+
+            # Context + messages
+            context_messages = await get_conversation_messages(conversation_id)
+            user_context = await get_user_context(user_id)
+            system_prompt = build_system_prompt(context_type, user_context)
+
+            messages = [{"role": "system", "content": system_prompt}]
+            for msg in context_messages:
+                role = "assistant" if msg["role"] == "ai" else "user"
+                messages.append({"role": role, "content": msg["content"]})
+            messages.append({"role": "user", "content": message})
+
+            # Save user message first
+            await save_messages(conversation_id, [
+                {"role": "user", "content": message}
+            ])
+
+            # Stream OpenAI response and send protobuf chunks
+            full_response = ""
+            seq = 0
+            stream = client.chat.completions.create(
+                model="gpt-4",
+                messages=messages,
+                max_tokens=500,
+                temperature=0.7,
+                stream=True,
+            )
+
+            for chunk in stream:
+                if chunk.choices[0].delta.content:
+                    part = chunk.choices[0].delta.content
+                    full_response += part
+                    seq += 1
+                    try:
+                        bytes_msg = encode_chat_chunk(
+                            conversation_id=conversation_id,
+                            text=part,
+                            sequence=seq,
+                        )
+                        await websocket.send_bytes(bytes_msg)
+                    except ProtobufUnavailable:
+                        # If protobuf generation isn't available, abort
+                        await websocket.close(code=1011)
+                        return
+
+            # Save AI response
+            await save_messages(conversation_id, [
+                {"role": "ai", "content": full_response}
+            ])
+
+            # Send completion message
+            try:
+                done_bytes = encode_chat_complete(
+                    conversation_id=conversation_id,
+                    full_text=full_response,
+                    suggestions=generate_suggestions(context_type, full_response),
+                    sequence=seq + 1,
+                )
+                await websocket.send_bytes(done_bytes)
+            except ProtobufUnavailable:
+                await websocket.close(code=1011)
+                return
+
+    except WebSocketDisconnect:
+        pass
+    except Exception as e:
+        try:
+            if encode_error:
+                err = encode_error(conversation_id=0, message=str(e), code=500)
+                await websocket.send_bytes(err)
+        finally:
+            try:
+                await websocket.close(code=1011)
+            except Exception:
+                pass
         
     except Exception as e:
         print(f"Streaming chat error: {e}")
